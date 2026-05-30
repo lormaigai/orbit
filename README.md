@@ -1,7 +1,6 @@
 # ◉ orbit
 
-Your second brain. .
-
+Your second brain
 A private WhatsApp-style self-chat app where you brain dump anything and AI silently organises it into tasks, events, reminders and ideas.
 
 ## Tech Stack
