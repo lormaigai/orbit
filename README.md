@@ -1,7 +1,10 @@
 # ◉ orbit
 
-Your second brain
-A private WhatsApp-style self-chat app where you brain dump anything and AI silently organises it into tasks, events, reminders and ideas.
+your **second** **brain**!!
+Orbit is a private WhatsApp-style self-chat app where you brain dump anything from texts voice memos images etc into a self-chat and AI organises it into tasks, events, reminders and ideas in the background. 
+I decided to build this because I personally text myself a lot (and in the notes app) as a way to brain dump and give future me reminders, but after a while looking for notes got messy. Orbit integrates AI to organise them and also 'resurface memories'. Focus and brainspace is limited and orbit acts as an external ****memory** **storage** **and **recalls** important info for you. 
+
+**Currently refining and adjusting, please let me know if you have any tips/suggestions/advice! Its my first time building an app on my own. **
 
 ## Tech Stack
 - React Native + Expo
@@ -23,12 +26,7 @@ A private WhatsApp-style self-chat app where you brain dump anything and AI sile
 4. Deploy edge function from /functions/extract-message
 5. Add OPENAI_API_KEY and SUPABASE_SERVICE_ROLE_KEY to Supabase secrets
 
-## Roadmap plan
-- [ ] Real email auth via Supabase
-- [ ] Stripe payments for Pro plan
-- [ ] Voice notes
-- [ ] Memory resurfacing
-- [ ] Insights tab
-- [ ] Play Store release
+## End goal
+Publish to appstore and playstore!
 ## Comments
-let me know if you have any thoughts/suggestions! 
+once again, do let me know if you have any thoughts/suggestions! 
