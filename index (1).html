@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orbit — Your AI Second Brain</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --midnight: #1C2B48;
+    --cerulean: #8EB1D1;
+    --baby: #A7C7E7;
+    --platinum: #E8ECEF;
+    --bg: #F4F7FA;
+    --white: #FFFFFF;
+    --muted: #8EB1D1;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--midnight);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* Glow blob */
+  .blob {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(142,177,209,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    top: -100px;
+    right: -100px;
+    pointer-events: none;
+    animation: blobFloat 8s ease-in-out infinite;
+  }
+
+  @keyframes blobFloat {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-30px, 40px); }
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(12px);
+    background: rgba(28,43,72,0.7);
+    border-bottom: 1px solid rgba(142,177,209,0.1);
+  }
+
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+
+  .nav-logo span { color: var(--cerulean); }
+
+  .nav-cta {
+    background: var(--cerulean);
+    color: var(--midnight);
+    border: none;
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .nav-cta:hover { background: var(--baby); transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+  }
+
+  .orbit-symbol {
+    font-size: 72px;
+    line-height: 1;
+    margin-bottom: 32px;
+    color: var(--cerulean);
+    animation: symbolPulse 3s ease-in-out infinite;
+    display: block;
+  }
+
+  @keyframes symbolPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(0.95); }
+  }
+
+  .hero-tag {
+    display: inline-block;
+    background: rgba(142,177,209,0.12);
+    border: 1px solid rgba(142,177,209,0.3);
+    color: var(--cerulean);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 28px;
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(42px, 8vw, 80px);
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 24px;
+    max-width: 800px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--cerulean);
+  }
+
+  .hero p {
+    font-size: clamp(16px, 2.5vw, 20px);
+    color: rgba(255,255,255,0.6);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 56px;
+    font-weight: 300;
+  }
+
+  /* SIGNUP FORM */
+  .signup-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(142,177,209,0.2);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 480px;
+    width: 100%;
+    backdrop-filter: blur(20px);
+  }
+
+  .signup-box h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .signup-box p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .incentive {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(142,177,209,0.08);
+    border: 1px solid rgba(142,177,209,0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+  }
+
+  .incentive-icon { font-size: 20px; }
+
+  .incentive-text {
+    font-size: 13px;
+    color: var(--baby);
+    line-height: 1.5;
+  }
+
+  .incentive-text strong {
+    color: var(--white);
+    display: block;
+    font-weight: 500;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .form-input {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(142,177,209,0.2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--white);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input::placeholder { color: rgba(255,255,255,0.3); }
+  .form-input:focus { border-color: var(--cerulean); }
+
+  .form-btn {
+    background: var(--cerulean);
+    color: var(--midnight);
+    border: none;
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .form-btn:hover { background: var(--baby); transform: translateY(-1px); }
+  .form-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .form-fine {
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    margin-top: 12px;
+    line-height: 1.6;
+  }
+
+  .success-msg {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .success-msg .check { font-size: 40px; margin-bottom: 12px; display: block; }
+  .success-msg h3 { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 8px; }
+  .success-msg p { font-size: 14px; color: rgba(255,255,255,0.5); }
+
+  /* FEATURES */
+  .features {
+    position: relative;
+    z-index: 1;
+    padding: 100px 24px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .features-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cerulean);
+    margin-bottom: 16px;
+  }
+
+  .features h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    text-align: center;
+    margin-bottom: 64px;
+    line-height: 1.1;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .feature-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(142,177,209,0.12);
+    border-radius: 20px;
+    padding: 32px;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+
+  .feature-card:hover {
+    border-color: rgba(142,177,209,0.3);
+    transform: translateY(-4px);
+  }
+
+  .feature-icon {
+    font-size: 28px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .feature-card h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  .feature-card p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.7;
+  }
+
+  /* DEMO CHAT */
+  .demo {
+    position: relative;
+    z-index: 1;
+    padding: 80px 24px;
+    text-align: center;
+  }
+
+  .demo h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    margin-bottom: 48px;
+  }
+
+  .phone-mockup {
+    display: inline-block;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(142,177,209,0.15);
+    border-radius: 40px;
+    padding: 20px;
+    max-width: 320px;
+    width: 100%;
+  }
+
+  .phone-screen {
+    background: #F4F7FA;
+    border-radius: 28px;
+    overflow: hidden;
+    padding: 20px 16px;
+  }
+
+  .phone-header {
+    color: #1C2B48;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+
+  .chat-bubble {
+    border-radius: 18px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    max-width: 85%;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: bubbleIn 0.4s forwards;
+  }
+
+  .chat-me {
+    background: #1C2B48;
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+  }
+
+  .chat-ai {
+    background: white;
+    color: #1C2B48;
+    border: 1px solid #E8ECEF;
+    border-bottom-left-radius: 4px;
+  }
+
+  .chat-container { display: flex; flex-direction: column; }
+
+  @keyframes bubbleIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chat-bubble:nth-child(1) { animation-delay: 0.2s; }
+  .chat-bubble:nth-child(2) { animation-delay: 0.8s; }
+  .chat-bubble:nth-child(3) { animation-delay: 1.4s; }
+  .chat-bubble:nth-child(4) { animation-delay: 2.0s; }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 60px 24px;
+    border-top: 1px solid rgba(142,177,209,0.1);
+    color: rgba(255,255,255,0.3);
+    font-size: 13px;
+    line-height: 2;
+  }
+
+  footer a { color: var(--cerulean); text-decoration: none; }
+
+  /* SCROLL REVEAL */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s, transform 0.7s;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    .signup-box { padding: 28px 20px; }
+    .form-row { flex-direction: column; }
+    .features { padding: 60px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob"></div>
+
+<nav>
+  <div class="nav-logo"><span>◉</span> orbit</div>
+  <a href="#signup" class="nav-cta">get early access</a>
+</nav>
+
+<section class="hero">
+  <span class="orbit-symbol">◉</span>
+  <div class="hero-tag">coming soon to Android</div>
+  <h1>Your thoughts,<br><em>finally organised.</em></h1>
+  <p>Brain dump anything — tasks, ideas, reminders — and Orbit's AI silently sorts it all for you. Like texting yourself, but smarter.</p>
+
+  <div class="signup-box" id="signup">
+    <h2>Join the waitlist</h2>
+    <p>Be first to download when we launch on the Play Store.</p>
+
+    <div class="incentive">
+      <span class="incentive-icon">🎁</span>
+      <div class="incentive-text">
+        <strong>Early access reward</strong>
+        First 500 signups get 3 months of Orbit Pro — free.
+      </div>
+    </div>
+
+    <form id="waitlistForm" action="https://formspree.io/f/YOURFORMID" method="POST">
+      <div class="form-row">
+        <input class="form-input" type="email" name="email" placeholder="your@email.com" required />
+        <button class="form-btn" type="submit">notify me</button>
+      </div>
+      <p class="form-fine">No spam. Just a ping when Orbit launches. Unsubscribe anytime.</p>
+    </form>
+
+    <div class="success-msg" id="successMsg">
+      <span class="check">✦</span>
+      <h3>You're on the list.</h3>
+      <p>We'll notify you the moment Orbit hits the Play Store.<br>Your 3 months Pro is reserved. 🎉</p>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <p class="features-label">what orbit does</p>
+  <h2>Stop organising.<br>Start thinking.</h2>
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <span class="feature-icon">💬</span>
+      <h3>Brain dump freely</h3>
+      <p>Type anything, anytime. "call mum tmr, gym at 6, idea for side project" — Orbit understands it all.</p>
+    </div>
+    <div class="feature-card reveal">
+      <span class="feature-icon">✦</span>
+      <h3>AI extracts everything</h3>
+      <p>Every message is silently processed. Tasks, events, reminders, and ideas appear in the organised tab automatically.</p>
+    </div>
+    <div class="feature-card reveal">
+      <span class="feature-icon">🔁</span>
+      <h3>Memory resurfacing</h3>
+      <p>Orbit remembers what you forget. Old unfinished tasks come back at the right moment.</p>
+    </div>
+    <div class="feature-card reveal">
+      <span class="feature-icon">📸</span>
+      <h3>Memory lane</h3>
+      <p>Upload photos and build a visual diary alongside your thoughts. Your second brain, complete.</p>
+    </div>
+  </div>
+</section>
+
+<section class="demo">
+  <h2>Feels like texting.<br>Works like magic.</h2>
+  <div class="phone-mockup">
+    <div class="phone-screen">
+      <div class="phone-header">◉ orbit</div>
+      <div class="chat-container">
+        <div class="chat-bubble chat-me">need to call dentist tmr morning, also gym at 6pm and pick up groceries after. keep forgetting to reply to sarah too</div>
+        <div class="chat-bubble chat-ai">◉ orbit captured 4 items</div>
+        <div class="chat-bubble chat-me">also idea — what if i started meal prepping on sundays</div>
+        <div class="chat-bubble chat-ai">◉ orbit captured 1 item</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>◉ orbit &nbsp;·&nbsp; your AI second brain</p>
+  <p style="margin-top:8px">
+    <a href="https://github.com/lormaigai/orbit-legal/blob/main/privacy-policy.md">privacy policy</a>
+    &nbsp;·&nbsp;
+    <a href="https://instagram.com/orbitapp.ai">@orbitapp.ai</a>
+  </p>
+  <p style="margin-top:16px; font-size:11px">© 2026 Orbit. All rights reserved.</p>
+</footer>
+
+<script>
+  // Form submission
+  const form = document.getElementById('waitlistForm');
+  const successMsg = document.getElementById('successMsg');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'joining…';
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        form.style.display = 'none';
+        successMsg.style.display = 'block';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'notify me';
+        alert('something went wrong, try again');
+      }
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'notify me';
+    }
+  });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => {
+      if (el.isIntersecting) el.target.classList.add('visible');
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
